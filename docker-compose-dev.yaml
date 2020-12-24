@@ -1,0 +1,37 @@
+version: '3.5'
+services:
+  chat-postgres:
+    container_name: chat-postgres
+    image: "postgres:10"
+    environment:
+      POSTGRES_USER: "username"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "chat_db"
+    ports:
+      - "5433:5432"
+
+  chat-mongo:
+    container_name: chat-mongo
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - "27017:27017"
+
+  hub:
+    image: selenium/hub:3.141.59-20200525
+    ports:
+      - "4444:4444"
+
+  firefox:
+    container_name: firefox-selenium
+    image: selenium/node-firefox:3.141.59-20200525
+    volumes:
+      - /dev/shm:/dev/shm
+    environment:
+      HUB_HOST: hub
+      HUB_PORT: 4444
+    entrypoint: bash -c 'SE_OPTS="-host $$HOSTNAME" /opt/bin/entry_point.sh'
+

@@ -1,0 +1,50 @@
+{
+  "name": "myfront",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "babel-preset-react": "^6.24.1",
+    "bootstrap": "^4.4.1",
+    "field": "^1.0.1",
+    "formik": "^2.0.6",
+    "link": "^0.1.5",
+    "react": "^16.2.0",
+    "react-autosuggest": "^10.0.2",
+    "react-bootstrap": "^1.0.0-beta.16",
+    "react-chat-elements": "^10.8.0",
+    "react-dom": "^16.2.0",
+    "react-native-vector-icons": "^6.6.0",
+    "react-redux": "^5.0.6",
+    "react-scripts": "^3.4.0",
+    "react-search": "^2.1.1",
+    "react-search-field": "^1.0.0",
+    "redux": "^3.7.2",
+    "redux-form": "^7.2.3",
+    "redux-logger": "^3.0.6",
+    "redux-thunk": "^2.2.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10"
+  },
+  "scripts": {
+    "start": "webpack -w",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

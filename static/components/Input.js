@@ -8,7 +8,7 @@ const Input = (props) => {
             message: '',
         },
         onSubmit: values => {
-            fetch('/messages', {
+            fetch('/messages/' + props.active_chat, {
                 method: 'post', headers: {
                     'Accept': 'application/json, text/plain, */*',
                     'Content-Type': 'application/json'

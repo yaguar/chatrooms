@@ -73,7 +73,7 @@ fetch('/messages')
     console.log('Fetch Error :-S', err)
   })
 
-fetch('/login_list?q=')
+fetch('/chat_list?q=')
   .then(
     function(response) {
       if (response.status !== 200) {

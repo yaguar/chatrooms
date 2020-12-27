@@ -42,7 +42,7 @@ const ModalNewDialog = (props) => {
   });
 
     const onChange = (value) => {
-        let url = '/login_list?q=' + value
+        let url = '/chat_list?q=' + value
         fetch(url, {
                 method: 'get', headers: {
                     'Accept': 'application/json, text/plain, */*',

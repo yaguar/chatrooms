@@ -28,15 +28,15 @@ class MongoUsers:
         """Получить список чатов пользователя"""
 
         result = await self.collection.find_one({'user': user})
-        return result['chats']
+        return result.get('chats', [])
 
 
 class MongoChats:
     """
         Объект чата в монге
 
-        'name': name,
-        'users': users,
+        'name': названия чата,
+        'users': список логинов пользователей, которые подписаны на данный чат,
         'create_time': time,
         'messages': [ {'login': login, 'msg': msg, 'time': time}, ]
     """
@@ -66,6 +66,12 @@ class MongoChats:
             msgs.pop(0)
         msgs.append(msg)
         await self.collection.update_one({'_id': ObjectId(chat_id)}, {'$set': {'messages': msgs}})
+
+    async def get_users_from_chat(self, chat_id):
+        """Берем список пользователей"""
+
+        result = await self.collection.find_one({'_id': ObjectId(chat_id)})
+        return result.get('users', [])
 
 
 class MongoMessages:

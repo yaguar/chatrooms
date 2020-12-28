@@ -23,6 +23,7 @@ async def init_app():
         db
     ]
     app = web.Application(middlewares=middle)
+    app['websockets'] = {}
     app['config'] = {}
     app['config']['gino'] = {'user': 'username', 'password': 'password', 'host': '0.0.0.0', 'port': '5433',
                              'database': 'chat_db'}

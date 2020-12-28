@@ -1,6 +1,5 @@
 import json
 
-
 class TestChat:
 
     async def test_get_main_info(self, client):
@@ -26,15 +25,6 @@ class TestChat:
         resp = await client.post('/create_chat', json={'name': 'test_chat', 'users': ['admin112', 'admin11', 'admin']})
         assert resp.status == 201
 
-    async def test_add_new_msg(self, client):
-        await client.post('/login', json={'login': 'admin112', 'password': 'admin'})
-        resp = await client.get('/chat_list?q=')
-        text = await resp.text()
-        result = json.loads(text)
-        chat_id = result[0]['id']
-        resp = await client.post(f'/messages/{chat_id}', json={"message": "тест"})
-        assert resp.status == 201
-
     async def test_get_msgs(self, client):
         await client.post('/login', json={'login': 'admin112', 'password': 'admin'})
         resp = await client.get('/chat_list?q=')
@@ -43,3 +33,19 @@ class TestChat:
         chat_id = result[0]['id']
         resp = await client.get(f'/messages/{chat_id}')
         assert resp.status == 200
+
+    async def test_add_new_msg(self, client):
+        await client.post('/login', json={'login': 'admin112', 'password': 'admin'})
+        ws = await client.ws_connect('/ws')
+        resp = await client.get('/chat_list?q=')
+        text = await resp.text()
+        result = json.loads(text)
+        chat_id = result[0]['id']
+        resp = await client.post(f'/messages/{chat_id}', json={"message": "тест2"})
+        msg = await ws.receive()
+        assert 'user' in msg.data
+        assert 'msg' in msg.data
+        assert 'time' in msg.data
+        assert resp.status == 201
+
+    # Добавить тест на несколько пользователей

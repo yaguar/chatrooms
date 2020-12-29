@@ -23,8 +23,6 @@ class App extends React.Component {
         }
         ws.onmessage = evt => {
             this.props.addMsg(JSON.parse(evt.data))
-            console.log('connected1')
-            console.log(JSON.parse(evt.data))
         }
 
     };

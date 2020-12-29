@@ -11,6 +11,15 @@ class TestChat:
         assert 'id' in result
         assert 'login' in result
 
+    async def test_add_new_chat_for_user(self, client):
+        await client.post('/login', json={'login': 'admin112', 'password': 'admin'})
+        resp = await client.post('/new_chat', json={'chatName': 'test_chat', 'users': [
+            {"id": 1, "login": "admin"},
+            {"id": 228, "login": "admintest1"},
+            {"id": 235, "login": "admin112"}
+        ]})
+        assert resp.status == 201
+
     async def test_get_chats_list(self, client):
         await client.post('/login', json={'login': 'admin', 'password': 'admin'})
         resp = await client.get('/chat_list?q=')
@@ -19,11 +28,6 @@ class TestChat:
         result = json.loads(text)
         assert 'id' in result[0]
         assert 'login' in result[0]
-
-    async def test_add_new_chat_for_user(self, client):
-        await client.post('/login', json={'login': 'admin112', 'password': 'admin'})
-        resp = await client.post('/create_chat', json={'name': 'test_chat', 'users': ['admin112', 'admin11', 'admin']})
-        assert resp.status == 201
 
     async def test_get_msgs(self, client):
         await client.post('/login', json={'login': 'admin112', 'password': 'admin'})

@@ -5,7 +5,7 @@ routes = [
     ('GET', '/', RoomMessages, 'room_messages'),
     ('GET', '/main_info', MainInfo, 'main_info'),
     ('GET', '/chat_list', ChatList, 'chat_list'),
-    ('POST', '/create_chat', NewChat, 'new_chat'),
+    ('POST', '/new_chat', NewChat, 'new_chat'),
     ('*', '/messages/{chat_id}', Messages, 'messages'),
     ('*', '/login', Login, 'login'),
     ('*', '/registration', Registration, 'registration'),

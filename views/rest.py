@@ -27,11 +27,12 @@ class NewChat(web.View):
         """
 
         data = await self.request.json()
+        login_list = [user['login'] for user in data['users']]
         # transaction
         chats = MongoChats(self.request.app['mongo']['chats'])
-        chat = await chats.create_chat(data['name'], data['users'])
+        chat = await chats.create_chat(data['chatName'], login_list)
         users = MongoUsers(self.request.app['mongo']['users'])
-        await users.add_chat_in_users(data['users'], str(chat.inserted_id), data['name'])
+        await users.add_chat_in_users(login_list, str(chat.inserted_id), data['chatName'])
         return web.Response(status=201)
 
 

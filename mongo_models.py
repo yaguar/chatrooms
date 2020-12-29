@@ -28,6 +28,9 @@ class MongoUsers:
         """Получить список чатов пользователя"""
 
         result = await self.collection.find_one({'user': user})
+        if not result:
+            await self.collection.insert_one({'user': user, 'chats': []})
+            result = {'user': user}
         return result.get('chats', [])
 
 

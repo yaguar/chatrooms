@@ -63,8 +63,9 @@ class App extends React.Component {
                         <SearchField
                           placeholder="Search..."
                           onChange={this.onChange}
-                        />&nbsp;&nbsp;<span><i className="fas fa-plus-square fa-lg" onClick={()=>this.props.updateVND(true)}></i></span></div>
+                        />&nbsp;&nbsp;<span><i className="fa fa-plus-square-o fa-lg" onClick={()=>this.props.updateVND(true)}></i></span></div>
                         {this.props.dialogs.map((dlg, index) => (
+                            <div className={dlg.id === this.props.active_chat ? "border border-primary" : ""}>
                             <ChatItem
                                 avatar={'https://upload.wikimedia.org/wikipedia/commons/2/21/Che_Guevara_vector_SVG_format.svg'}
                                 alt={'Reactjs'}
@@ -72,7 +73,9 @@ class App extends React.Component {
                                 subtitle={'not status'}
                                 unread={0}
                                 onClick={()=>this.props.rewriteMsg(dlg.id)}
+                                style={{color: 'red'}}
                             />
+                            </div>
                         ))}
                     </div>
                     <ModalNewDialog
@@ -86,7 +89,7 @@ class App extends React.Component {
                             {this.props.messages.map((msg, index) => (
                                 <MessageBox
                                     key={index}
-                                    position={msg.user === 'admin' ? 'right' : 'left'}
+                                    position={msg.user === this.props.main_info.login ? 'right' : 'left'}
                                     type={'text'}
                                     text={msg.msg}
                                     index={index}

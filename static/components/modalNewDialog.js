@@ -18,7 +18,7 @@ const ModalNewDialog = (props) => {
         onSubmit: values => {
             values['users'] = props.users
             let url = '/new_chat'
-        fetch(url, {
+            fetch(url, {
                 method: 'post', headers: {
                     'Accept': 'application/json, text/plain, */*',
                     'Content-Type': 'application/json'
@@ -27,17 +27,19 @@ const ModalNewDialog = (props) => {
             })
             .then(
                 function (response) {
-                    if (response.status != 200) {
+                    if (response.status != 201) {
                         console.log('Looks like there was a problem. Status Code: ' +
                             response.status);
                         return 0;
                     }
+
                     return 1;
                 }
             )
             .catch(function (err) {
                 console.log('Fetch Error :-S', err);
             });
+            props.visible(false)
         },
   });
 

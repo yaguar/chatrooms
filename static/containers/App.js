@@ -56,9 +56,9 @@ class App extends React.Component {
 
     render () {
         return (
-            <div>
-                <div class="row">
-                    <div class="col-sm-3">
+            <div className="card" style={{background: "white", width: "100%", height: "100%"}}>
+                <div className="row">
+                    <div className="col-sm-3">
                         <div>
                         <SearchField
                           placeholder="Search..."
@@ -97,9 +97,9 @@ class App extends React.Component {
                                 />
                             ))}
                         </div>
-                    <span style={{position:"fixed", bottom:0, height:"25%", width:"60%", background:"white"}}>
-                    <Input active_chat={this.props.active_chat}/>
-                    </span>
+                    {/*<span style={{position:"fixed", bottom:0, height:"25%", width:"60%", background:"white"}}>*/}
+                    <Input active_chat={this.props.active_chat} position={"absolute"} className="absolute-bottom"/>
+                    {/*</span>*/}
                     </div>
                 </div>
             </div>

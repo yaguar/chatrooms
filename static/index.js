@@ -28,11 +28,13 @@ const rootReducer = combineReducers({
     maybe_users_for_new_chat: maybe_users_for_new_chat
 });
 
-const composeEnhancer = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-
-const store = createStore(
+export let store = createStore(
   rootReducer,
-  composeEnhancer(applyMiddleware(thunk, logger)),
+  compose(
+    applyMiddleware(thunk),
+    applyMiddleware(logger)
+  ),
+  window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
 );
 
 fetch('/main_info')

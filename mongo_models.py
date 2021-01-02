@@ -106,6 +106,13 @@ class MongoChats:
         result = await self.collection.find_one({'_id': ObjectId(chat_id)})
         return result.get('users', [])
 
+    async def search_chat(self, search):
+        """Поиск по имени"""
+
+        cursor = self.collection.find({'name': {'$regex': f'.*{search}.*'}})
+        result = await cursor.to_list(length=10)
+        return result
+
 
 class MongoMessages:
     """

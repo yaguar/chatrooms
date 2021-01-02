@@ -20,6 +20,15 @@ class TestChat:
         ]})
         assert resp.status == 201
 
+    async def test_get_logins_list(self, client):
+        await client.post('/login', json={'login': 'admin', 'password': 'admin'})
+        resp = await client.get('/chat_list?q=a')
+        assert resp.status == 200
+        text = await resp.text()
+        result = json.loads(text)
+        assert 'id' in result[0]
+        assert 'login' in result[0]
+
     async def test_get_chats_list(self, client):
         await client.post('/login', json={'login': 'admin', 'password': 'admin'})
         resp = await client.get('/chat_list?q=')

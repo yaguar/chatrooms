@@ -1,10 +1,11 @@
 from views.pages import Registration, RoomMessages, Login
-from views.rest import MainInfo, ChatList, NewChat, Messages, WebSocket
+from views.rest import MainInfo, ChatList, LoginList, NewChat, Messages, WebSocket
 
 routes = [
     ('GET', '/', RoomMessages, 'room_messages'),
     ('GET', '/main_info', MainInfo, 'main_info'),
     ('GET', '/chat_list', ChatList, 'chat_list'),
+    ('GET', '/login_list', LoginList, 'login_list'),
     ('POST', '/new_chat', NewChat, 'new_chat'),
     ('*', '/messages/{chat_id}', Messages, 'messages'),
     ('*', '/login', Login, 'login'),

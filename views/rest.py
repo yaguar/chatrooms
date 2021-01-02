@@ -34,7 +34,7 @@ class NewChat(web.View):
         login_list = list(set(login_list))
         # transaction
         chats = MongoChats(self.request.app['mongo']['chats'])
-        chat = await chats.create_chat(data['chatName'], login_list)
+        chat = await chats.create_chat(login_list, data['chatName'])
         users = MongoUsers(self.request.app['mongo']['users'])
         await users.add_chat_in_users(login_list, str(chat.inserted_id), data['chatName'])
         return web.Response(status=201)
@@ -44,19 +44,43 @@ class ChatList(web.View):
     """Вьюха списка полизователей и чатов"""
 
     async def get(self):
-        """Отдать список пользователей"""
+        """Отдать список пользователей и чатов"""
         search = self.request.rel_url.query['q']
+        session = await get_session(self.request)
+        login = session.get('login')
         if search:
-            chat_list = await User.query.where(User.login.contains(search)).gino.all()
+            chat_list = await User.query.where(User.login.contains(search.replace('_', r'\_')))\
+                .where(User.login != login).gino.all()
             chat_list = chat_list[:10]
+            if len(chat_list) < 10:
+                mongo = MongoChats(self.request.app['mongo']['chats'])
+
+                new_chat_list = await mongo.search_chat(search)
+                for chat in new_chat_list:
+                    chat['id'] = str(chat.pop('_id'))
+                    chat['login'] = chat.pop('name')
+                chat_list.extend(new_chat_list)
         else:
-            session = await get_session(self.request)
-            login = session.get('login')
             chats = MongoUsers(self.request.app['mongo']['users'])
             chat_list = await chats.get_chats(login)
             for chat in chat_list:
                 chat['login'] = chat.pop('name')
         return web.Response(status=200, body=JSONEncoder().encode(chat_list))
+
+
+class LoginList(web.View):
+    """Вьюха списка полизователей и чатов"""
+
+    async def get(self):
+        """Отдать список пользователей"""
+        search = self.request.rel_url.query['q']
+        session = await get_session(self.request)
+        login = session.get('login')
+        login_list = []
+        if search:
+            login_list = await User.query.where(User.login.contains(search.replace('_', r'\_')))\
+                .where(User.login != login).gino.all()
+        return web.Response(status=200, body=JSONEncoder().encode(login_list[:10]))
 
 
 class Messages(web.View):

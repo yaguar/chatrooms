@@ -44,7 +44,7 @@ const ModalNewDialog = (props) => {
   });
 
     const onChange = (value) => {
-        let url = '/chat_list?q=' + value
+        let url = '/login_list?q=' + value
         fetch(url, {
                 method: 'get', headers: {
                     'Accept': 'application/json, text/plain, */*',
@@ -75,7 +75,10 @@ const ModalNewDialog = (props) => {
     const onClickRemove = (user) => {
         store.dispatch(removeUserForNewChat(user))
     }
-    const handleClose = () => props.visible(false)
+    const handleClose = () => {
+        store.dispatch(rewriteMaybeUserForNewChat([]))
+        props.visible(false)
+    }
     return (
         <Modal show={props.show} onHide={handleClose}>
             <form onSubmit={formik.handleSubmit}>

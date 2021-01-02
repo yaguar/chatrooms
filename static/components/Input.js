@@ -40,7 +40,7 @@ const Input = (props) => {
         <form onSubmit={formik.handleSubmit} class="sticky-bottom">
             <div className="form-group">
                 <textarea id="message" name="message" type="text" className="form-control input-sm chat_input"
-                placeholder="Write your message here..." onChange = {formik.handleChange} value = {formik.values.message}></textarea>
+                placeholder="Write your message here..." onChange = {formik.handleChange} value = {formik.values.message}/>
             </div>
             <button className="btn btn-primary" type="submit" onClick = {formik.handleSubmit}>Send</button>
         < /form>

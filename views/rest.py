@@ -66,8 +66,17 @@ class Messages(web.View):
         """Метод для выдачи списка сообщений у конкретного чата"""
 
         chat_id = self.request.match_info.get('chat_id', None)
-        mongo = MongoChats(self.request.app['mongo']['chats'])
-        messages = await mongo.get_messages(chat_id)
+        if chat_id.isdigit():
+            users = MongoUsers(self.request.app['mongo']['users'])
+            session = await get_session(self.request)
+            login = session.get('login')
+            dialogs = await users.get_dialogs(login)
+            chat_id = dialogs.get(chat_id, None)
+        if chat_id is not None:
+            mongo = MongoChats(self.request.app['mongo']['chats'])
+            messages = await mongo.get_messages(chat_id)
+        else:
+            messages = []
         return web.Response(status=200, body=JSONEncoder().encode(messages))
 
     async def post(self):
@@ -75,11 +84,23 @@ class Messages(web.View):
 
         # Записываем в базы
         chat_id = self.request.match_info.get('chat_id', None)
+        session = await get_session(self.request)
+        login = session.get('login')
         data = await self.request.json()
         message = data['message']
         mongo_chats = MongoChats(self.request.app['mongo']['chats'])
-        session = await get_session(self.request)
-        login = session.get('login')
+        if chat_id.isdigit():
+            users = MongoUsers(self.request.app['mongo']['users'])
+            dialogs = await users.get_dialogs(login)
+            dlg_id = chat_id
+            if dialogs.get(chat_id, None) is None:
+                login2 = await User.select('login').where(User.id == int(chat_id)).gino.scalar()
+                chat_id = await mongo_chats.create_chat([login, login2])
+                chat_id = str(chat_id.inserted_id)
+                await users.create_dialog(login, dlg_id, chat_id)
+                await users.create_dialog(login2, session.get('id'), chat_id)
+                await users.add_chat_in_users([login, ], chat_id, login2)
+                await users.add_chat_in_users([login2, ], chat_id, login)
         time = datetime.now()
         obj_msg = {'user': login, 'msg': message, 'time': time}
         await mongo_chats.add_msg(chat_id, obj_msg)

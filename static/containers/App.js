@@ -56,27 +56,33 @@ class App extends React.Component {
 
     render () {
         return (
-            <div className="card" style={{background: "white", width: "100%", height: "100%"}}>
                 <div className="row">
-                    <div className="col-sm-3">
+                    <div className="col-sm-3" >
+                        <br />
                         <div>
                         <SearchField
                           placeholder="Search..."
                           onChange={this.onChange}
-                        />&nbsp;&nbsp;<span><i className="fa fa-plus-square-o fa-lg" onClick={()=>this.props.updateVND(true)}></i></span></div>
-                        {this.props.dialogs.map((dlg, index) => (
-                            <div className={dlg.id === this.props.active_chat ? "border border-primary" : ""}>
-                            <ChatItem
-                                avatar={'https://upload.wikimedia.org/wikipedia/commons/2/21/Che_Guevara_vector_SVG_format.svg'}
-                                alt={'Reactjs'}
-                                title={dlg.login}
-                                subtitle={'not status'}
-                                unread={0}
-                                onClick={()=>this.props.rewriteMsg(dlg.id)}
-                                style={{color: 'red'}}
-                            />
+                        />&nbsp;&nbsp;<span><i className="fa fa-plus-square-o fa-lg" onClick={()=>this.props.updateVND(true)}/></span>
+                        </div>
+                        <br />
+                        <div className="panel-chat">
+                            <div className="panel-body-chat">
+                            {this.props.dialogs.map((dlg, index) => (
+                                <div className={dlg.id === this.props.active_chat ? "border border-primary" : ""}>
+                                    <ChatItem
+                                        avatar={'https://upload.wikimedia.org/wikipedia/commons/2/21/Che_Guevara_vector_SVG_format.svg'}
+                                        alt={'Reactjs'}
+                                        title={dlg.login}
+                                        subtitle={'not status'}
+                                        unread={0}
+                                        onClick={()=>this.props.rewriteMsg(dlg.id)}
+                                        style={{color: 'red'}}
+                                    />
+                                </div>
+                            ))}
                             </div>
-                        ))}
+                        </div>
                     </div>
                     <ModalNewDialog
                         show={this.props.visible_new_dialog}
@@ -84,8 +90,10 @@ class App extends React.Component {
                         maybe_users={this.props.maybe_users_for_new_chat}
                         users={this.props.users_for_new_chat}
                     />
-                    <div className="col-sm-9">
-                        <div style={{overflow:"scroll", height:"65%", overflowX:"hidden"}}>
+                    <div className="col-sm-9" >
+                        <br />
+                        <div className="panel panel-primary">
+                            <div className="panel-body">
                             {this.props.messages.map((msg, index) => (
                                 <MessageBox
                                     key={index}
@@ -96,13 +104,14 @@ class App extends React.Component {
                                     date={new Date(msg.time)}
                                 />
                             ))}
+                            </div>
                         </div>
-                    {/*<span style={{position:"fixed", bottom:0, height:"25%", width:"60%", background:"white"}}>*/}
-                    <Input active_chat={this.props.active_chat} position={"absolute"} className="absolute-bottom"/>
-                    {/*</span>*/}
+                        <br />
+                        <div className="panel-footer">
+                            <Input active_chat={this.props.active_chat} />
+                        </div>
                     </div>
                 </div>
-            </div>
         );
     }
 };

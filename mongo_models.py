@@ -1,16 +1,28 @@
 from datetime import datetime
 from bson.objectid import ObjectId
 
+
 class MongoUsers:
     """
         Объект пользователя в монге
 
         'user': логин
         'chats': [ {'id': chat_id, 'name': name} ] - список чатов для пользователя
+        'dialogs': { id_postgres: id_chats } - список диалогов, необходимо чтобы понимать какой чат выводить
+        при запросе /messages/postgres_id, создается при при добавлении первого диалога
     """
 
     def __init__(self, collection):
         self.collection = collection
+
+    async def get_or_create_user(self, user):
+        """Получаем объект пользователя если он есть. Создаем его, если такого не оказалось"""
+
+        result = await self.collection.find_one({'user': user})
+        if not result:
+            await self.collection.insert_one({'user': user, 'chats': []})
+            result = {'user': user}
+        return result
 
     async def add_chat_in_users(self, users, chat_id, name):
         """Добавляем каждому пользователю новый чат"""
@@ -27,17 +39,35 @@ class MongoUsers:
     async def get_chats(self, user):
         """Получить список чатов пользователя"""
 
-        result = await self.collection.find_one({'user': user})
-        if not result:
-            await self.collection.insert_one({'user': user, 'chats': []})
-            result = {'user': user}
+        result = await self.get_or_create_user(user)
         return result.get('chats', [])
+
+    async def get_dialogs(self, user):
+        """Получить список чатов пользователя"""
+
+        result = await self.get_or_create_user(user)
+        return result.get('dialogs', {})
+
+    async def create_dialog(self, user, dlg_id, chat_id):
+        """
+        :param user: логин
+        :param dlg_id: id пользователя в постгрес
+        :param chat_id: id чата в mongo
+        :return:
+        """
+
+        result = await self.get_or_create_user(user)
+        dialogs = result.get('dialogs', {})
+        dialogs[dlg_id] = chat_id
 
 
 class MongoChats:
     """
-        Объект чата в монге
+        Объект чата/диалога в монге
 
+        диалог - чат с одним юзером
+
+        Объект чата
         'name': названия чата,
         'users': список логинов пользователей, которые подписаны на данный чат,
         'create_time': time,
@@ -47,7 +77,7 @@ class MongoChats:
     def __init__(self, collection):
         self.collection = collection
 
-    async def create_chat(self, name, users):
+    async def create_chat(self, users, name=''):
         """Создаем новый чат"""
 
         time = datetime.now()

@@ -12,6 +12,7 @@ import ModalNewDialog from '../components/modalNewDialog';
 import {connect} from "react-redux";
 import deleteMessage from "../action/deletemessage";
 import {store} from "../index";
+import zeroUnreadMsg from "../action/zerounreadmsg";
 
 class App extends React.Component {
 
@@ -74,8 +75,8 @@ class App extends React.Component {
                                         avatar={'https://upload.wikimedia.org/wikipedia/commons/2/21/Che_Guevara_vector_SVG_format.svg'}
                                         alt={'Reactjs'}
                                         title={dlg.login}
-                                        subtitle={'not status'}
-                                        unread={0}
+                                        subtitle={'msg' in dlg ? dlg.msg : ''}
+                                        unread={'unread' in dlg ? dlg.unread : 0}
                                         onClick={()=>this.props.rewriteMsg(dlg.id)}
                                         style={{color: 'red'}}
                                     />
@@ -122,6 +123,7 @@ const mapDispatchToProps = (dispatch) => {
         updateVND: (visible) => {dispatch(updateVisibleNewDialog(visible))},
         rewriteDlg: (dialogs) => {dispatch(rewriteDialogs(dialogs))},
         rewriteMsg: (chat_id) => {
+	        dispatch(zeroUnreadMsg(chat_id))
 	        dispatch(changeActiveChat(chat_id))
 	        fetch('/messages/' + chat_id)
             .then(

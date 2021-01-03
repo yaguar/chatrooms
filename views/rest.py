@@ -90,10 +90,10 @@ class Messages(web.View):
         """Метод для выдачи списка сообщений у конкретного чата"""
 
         chat_id = self.request.match_info.get('chat_id', None)
+        users = MongoUsers(self.request.app['mongo']['users'])
+        session = await get_session(self.request)
+        login = session.get('login')
         if chat_id.isdigit():
-            users = MongoUsers(self.request.app['mongo']['users'])
-            session = await get_session(self.request)
-            login = session.get('login')
             dialogs = await users.get_dialogs(login)
             chat_id = dialogs.get(chat_id, None)
         if chat_id is not None:
@@ -101,6 +101,7 @@ class Messages(web.View):
             messages = await mongo.get_messages(chat_id)
         else:
             messages = []
+        await users.zero_unread(login, chat_id)
         return web.Response(status=200, body=JSONEncoder().encode(messages))
 
     async def post(self):
@@ -113,8 +114,8 @@ class Messages(web.View):
         data = await self.request.json()
         message = data['message']
         mongo_chats = MongoChats(self.request.app['mongo']['chats'])
+        users = MongoUsers(self.request.app['mongo']['users'])
         if chat_id.isdigit():
-            users = MongoUsers(self.request.app['mongo']['users'])
             dialogs = await users.get_dialogs(login)
             dlg_id = chat_id
             if dialogs.get(chat_id, None) is None:
@@ -126,8 +127,12 @@ class Messages(web.View):
                 await users.add_chat_in_users([login, ], chat_id, login2)
                 await users.add_chat_in_users([login2, ], chat_id, login)
         time = datetime.now()
+        # Как то красиво завернуть
         obj_msg = {'user': login, 'msg': message, 'time': time}
         await mongo_chats.add_msg(chat_id, obj_msg)
+        users_from_this_chat = await mongo_chats.get_users_from_chat(chat_id)
+        for user in users_from_this_chat:
+            await users.add_msg(user, chat_id, message)
         mongo_msg = MongoMessages(self.request.app['mongo']['messages'])
         await mongo_msg.add_message(chat_id, obj_msg)
 

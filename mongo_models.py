@@ -7,7 +7,12 @@ class MongoUsers:
         Объект пользователя в монге
 
         'user': логин
-        'chats': [ {'id': chat_id, 'name': name} ] - список чатов для пользователя
+        'chats': [{
+            'id': chat_id,
+            'name': name,
+            'unread': int,
+            'msg': последнее сообщение чата
+        }] - список чатов для пользователя
         'dialogs': { id_postgres: id_chats } - список диалогов, необходимо чтобы понимать какой чат выводить
         при запросе /messages/postgres_id, создается при при добавлении первого диалога
     """
@@ -30,11 +35,13 @@ class MongoUsers:
         for user in users:
             user_chats = await self.collection.find_one({'user': user})
             if user_chats:
-                user_chats['chats'].append({'id': chat_id, 'name': name})
+                user_chats['chats'].append({'id': chat_id, 'name': name, 'unread': 0})
                 _id = user_chats['_id']
                 await self.collection.update_one({'_id': _id}, {'$set': {'chats': user_chats['chats']}})
             else:
-                await self.collection.insert_one({'user': user, 'chats': [{'id': chat_id, 'name': name}, ]})
+                await self.collection.insert_one({'user': user, 'chats': [
+                    {'id': chat_id, 'name': name, 'unread': 0},
+                ]})
 
     async def get_chats(self, user):
         """Получить список чатов пользователя"""
@@ -59,6 +66,31 @@ class MongoUsers:
         result = await self.get_or_create_user(user)
         dialogs = result.get('dialogs', {})
         dialogs[dlg_id] = chat_id
+
+    async def add_msg(self, user, chat_id, msg):
+        """Действия при добавлении нового сообщения"""
+
+        user_chats = await self.collection.find_one({'user': user})
+        chats = user_chats['chats']
+        for i, chat in enumerate(chats):
+            if chat['id'] == chat_id:
+                chat['unread'] = chat.get('unread', 0) + 1
+                chat['msg'] = msg
+                chats.pop(i)
+                chats.insert(0, chat)
+                break
+        await self.collection.update_one({'user': user}, {'$set': {'chats': chats}})
+
+    async def zero_unread(self, user, chat_id):
+        """Обнулить непрочитанные сообщения у чата"""
+
+        user_chats = await self.collection.find_one({'user': user})
+        chats = user_chats['chats']
+        for chat in chats:
+            if chat['id'] == chat_id:
+                chat['unread'] = 0
+                break
+        await self.collection.update_one({'user': user}, {'$set': {'chats': chats}})
 
 
 class MongoChats:

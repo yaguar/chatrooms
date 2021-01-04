@@ -24,6 +24,8 @@ class App extends React.Component {
         }
         ws.onmessage = evt => {
             this.props.addMsg(JSON.parse(evt.data))
+            var audio = new Audio('static/media/getmsg.mp3');
+            audio.play();
         }
 
     };
@@ -102,6 +104,7 @@ class App extends React.Component {
                                     type={'text'}
                                     text={msg.msg}
                                     index={index}
+                                    title={msg.user}
                                     date={new Date(msg.time)}
                                 />
                             ))}

@@ -25,7 +25,7 @@ const rootReducer = combineReducers({
     active_chat: active_chat,
     visible_new_dialog: visible_new_dialog,
     users_for_new_chat: users_for_new_chat,
-    maybe_users_for_new_chat: maybe_users_for_new_chat
+    maybe_users_for_new_chat: maybe_users_for_new_chat,
 });
 
 export let store = createStore(
@@ -55,41 +55,6 @@ fetch('/main_info')
     console.log('Fetch Error :-S', err)
   })
 
-fetch('/messages')
-  .then(
-    function(response) {
-      if (response.status !== 200) {
-        console.log('Looks like there was a problem. Status Code: ' +
-        response.status);
-        return;
-      }
-
-      response.json().then(function(data) {
-        data.map((message, index) => store.dispatch(addMessage(message)))
-      });
-    }
-  )
-  .catch(function(err) {
-    console.log('Fetch Error :-S', err)
-  })
-
-fetch('/chat_list?q=')
-  .then(
-    function(response) {
-      if (response.status !== 200) {
-        console.log('Looks like there was a problem. Status Code: ' +
-        response.status);
-        return;
-      }
-
-      response.json().then(function(data) {
-        store.dispatch(rewriteDialogs(data))
-      });
-    }
-  )
-  .catch(function(err) {
-    console.log('Fetch Error :-S', err)
-  })
 
 ReactDOM.render(
   <Provider store={store}>

@@ -92,6 +92,13 @@ class MongoUsers:
                 break
         await self.collection.update_one({'user': user}, {'$set': {'chats': chats}})
 
+    async def search_chat(self, user, search):
+        """Поиск чата по имени в списке чата пользователя"""
+
+        result = await self.collection.find_one({'user': user})
+        chats = result.get('chats', [])
+        return list(filter(lambda chat: search in chat['name'], chats))
+
 
 class MongoChats:
     """

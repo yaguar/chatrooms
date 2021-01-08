@@ -1,7 +1,7 @@
 from aiohttp import web
 from aiohttp.web import middleware
 from aiohttp_session import get_session
-from utils import check_pass, check_path
+from utils.other_utils import check_pass, check_path
 
 
 @middleware

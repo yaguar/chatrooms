@@ -8,30 +8,12 @@ const Input = (props) => {
             message: '',
         },
         onSubmit: values => {
-            fetch('/messages/' + props.active_chat, {
-                method: 'post', headers: {
-                    'Accept': 'application/json, text/plain, */*',
-                    'Content-Type': 'application/json'
-                }, body: JSON.stringify({
+            let body = JSON.stringify({
+                    type: 'POST_MESSAGE',
                     message: values.message,
                     chat_id: props.active_chat
                 })
-            })
-                .then(
-                    function (response) {
-                        if (response.status != 200) {
-                            console.log('Looks like there was a problem. Status Code: ' +
-                                response.status);
-                            return 0;
-                        }
-
-                        return 1;
-
-                    }
-                )
-                .catch(function (err) {
-                    console.log('Fetch Error :-S', err);
-                });
+            props.websocket.send(body)
             formik.resetForm();
         },
     });
@@ -44,7 +26,7 @@ const Input = (props) => {
             </div>
             <button className="btn btn-primary" type="submit" onClick = {formik.handleSubmit}>Send</button>
         < /form>
-    );
+    )
 }
 
 export default Input;

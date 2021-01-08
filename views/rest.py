@@ -1,9 +1,8 @@
-from datetime import datetime
+import json
 from aiohttp import web, WSMsgType
-from aiohttp_session import get_session
-from mongo_models import MongoChats, MongoUsers, MongoMessages
+from mongo_models import MongoChats, MongoUsers
 from serializers import JSONEncoder
-from models import User
+from utils.views_utils import get_chats, create_chat, get_logins, get_messages, post_message
 
 
 class MainInfo(web.View):
@@ -27,16 +26,10 @@ class NewChat(web.View):
         """
 
         data = await self.request.json()
-        session = await get_session(self.request)
-        login = session.get('login')
-        login_list = [user['login'] for user in data['users']]
-        login_list.append(login)
-        login_list = list(set(login_list))
-        # transaction
+        login = self.request.login
         chats = MongoChats(self.request.app['mongo']['chats'])
-        chat = await chats.create_chat(login_list, data['chatName'])
         users = MongoUsers(self.request.app['mongo']['users'])
-        await users.add_chat_in_users(login_list, str(chat.inserted_id), data['chatName'])
+        await create_chat(login, data, {'users': users, 'chats': chats})
         return web.Response(status=201)
 
 
@@ -46,25 +39,8 @@ class ChatList(web.View):
     async def get(self):
         """Отдать список пользователей и чатов"""
         search = self.request.rel_url.query['q']
-        session = await get_session(self.request)
-        login = session.get('login')
-        if search:
-            chat_list = await User.query.where(User.login.contains(search.replace('_', r'\_')))\
-                .where(User.login != login).gino.all()
-            chat_list = chat_list[:10]
-            if len(chat_list) < 10:
-                mongo = MongoChats(self.request.app['mongo']['chats'])
-
-                new_chat_list = await mongo.search_chat(search)
-                for chat in new_chat_list:
-                    chat['id'] = str(chat.pop('_id'))
-                    chat['login'] = chat.pop('name')
-                chat_list.extend(new_chat_list)
-        else:
-            chats = MongoUsers(self.request.app['mongo']['users'])
-            chat_list = await chats.get_chats(login)
-            for chat in chat_list:
-                chat['login'] = chat.pop('name')
+        login = self.request.login
+        chat_list = await get_chats(search, login, self.request.app['mongo'])
         return web.Response(status=200, body=JSONEncoder().encode(chat_list))
 
 
@@ -74,12 +50,8 @@ class LoginList(web.View):
     async def get(self):
         """Отдать список пользователей"""
         search = self.request.rel_url.query['q']
-        session = await get_session(self.request)
-        login = session.get('login')
-        login_list = []
-        if search:
-            login_list = await User.query.where(User.login.contains(search.replace('_', r'\_')))\
-                .where(User.login != login).gino.all()
+        login = self.request.login
+        login_list = await get_logins(search, login)
         return web.Response(status=200, body=JSONEncoder().encode(login_list[:10]))
 
 
@@ -91,57 +63,23 @@ class Messages(web.View):
 
         chat_id = self.request.match_info.get('chat_id', None)
         users = MongoUsers(self.request.app['mongo']['users'])
-        session = await get_session(self.request)
-        login = session.get('login')
-        if chat_id.isdigit():
-            dialogs = await users.get_dialogs(login)
-            chat_id = dialogs.get(chat_id, None)
-        if chat_id is not None:
-            mongo = MongoChats(self.request.app['mongo']['chats'])
-            messages = await mongo.get_messages(chat_id)
-        else:
-            messages = []
-        await users.zero_unread(login, chat_id)
+        chats = MongoChats(self.request.app['mongo']['chats'])
+        login = self.request.login
+        messages = await get_messages(chat_id, login, {'users': users, 'chats': chats})
         return web.Response(status=200, body=JSONEncoder().encode(messages))
 
     async def post(self):
         """Метод для обработки сообщения в чате"""
 
-        # Записываем в базы
         chat_id = self.request.match_info.get('chat_id', None)
-        session = await get_session(self.request)
-        login = session.get('login')
+        req_id = self.request.id
+        login = self.request.login
+        ws = self.request.app['websockets']
         data = await self.request.json()
-        message = data['message']
-        mongo_chats = MongoChats(self.request.app['mongo']['chats'])
-        users = MongoUsers(self.request.app['mongo']['users'])
-        if chat_id.isdigit():
-            dialogs = await users.get_dialogs(login)
-            dlg_id = chat_id
-            if dialogs.get(chat_id, None) is None:
-                login2 = await User.select('login').where(User.id == int(chat_id)).gino.scalar()
-                chat_id = await mongo_chats.create_chat([login, login2])
-                chat_id = str(chat_id.inserted_id)
-                await users.create_dialog(login, dlg_id, chat_id)
-                await users.create_dialog(login2, session.get('id'), chat_id)
-                await users.add_chat_in_users([login, ], chat_id, login2)
-                await users.add_chat_in_users([login2, ], chat_id, login)
-        time = datetime.now()
-        # Как то красиво завернуть
-        obj_msg = {'user': login, 'msg': message, 'time': time}
-        await mongo_chats.add_msg(chat_id, obj_msg)
-        users_from_this_chat = await mongo_chats.get_users_from_chat(chat_id)
-        for user in users_from_this_chat:
-            await users.add_msg(user, chat_id, message)
-        mongo_msg = MongoMessages(self.request.app['mongo']['messages'])
-        await mongo_msg.add_message(chat_id, obj_msg)
-
-        # Раскидываем по вебсокетам
-        obj_msg['time'] = str(obj_msg['time'])
-        users = await mongo_chats.get_users_from_chat(chat_id)
+        users, obj_msg = await post_message(chat_id, req_id, login, data, self.request.app['mongo'])
         for user in users:
-            if user in self.request.app['websockets']:
-                await self.request.app['websockets'][user].send_json(obj_msg)
+            if user in ws:
+                await ws[user].send_json(obj_msg)
 
         return web.Response(status=201)
 
@@ -154,6 +92,7 @@ class WebSocket(web.View):
 
         ws = web.WebSocketResponse()
         await ws.prepare(self.request)
+        req_id = self.request.id
         login = self.request.login
         self.request.app['websockets'][login] = ws
 
@@ -162,6 +101,41 @@ class WebSocket(web.View):
             if msg.type == WSMsgType.TEXT:
                 if msg.data == 'close':
                     await ws.close()
+                else:
+                    data = json.loads(msg.data)
+                    if data['type'] == 'GET_CHATS':
+                        chat_list = await get_chats(data['search'], login, self.request.app['mongo'])
+                        await ws.send_json({'type': 'GET_CHATS', 'chats': JSONEncoder().encode(chat_list)})
+                    elif data['type'] == 'CREATE_CHAT':
+                        users, chat = await create_chat(login, data['chat'], {
+                            'users': MongoUsers(self.request.app['mongo']['users']),
+                            'chats': MongoChats(self.request.app['mongo']['chats'])
+                        })
+                        for user in users:
+                            if user in self.request.app['websockets']:
+                                await self.request.app['websockets'][user].send_json({
+                                    'type': 'NEW_CHAT', 'chat': JSONEncoder().encode(chat)
+                                })
+                    elif data['type'] == 'GET_LOGINS':
+                        login_list = await get_logins(data['search'], login)
+                        await ws.send_json({'type': 'GET_LOGINS', 'logins': JSONEncoder().encode(login_list)})
+                    elif data['type'] == 'GET_MESSAGES':
+                        messages = await get_messages(str(data['chat_id']), login, {
+                            'users': MongoUsers(self.request.app['mongo']['users']),
+                            'chats': MongoChats(self.request.app['mongo']['chats'])
+                        })
+                        await ws.send_json({'type': 'GET_MESSAGES', 'msgs': JSONEncoder().encode(messages)})
+                    elif data['type'] == 'POST_MESSAGE':
+                        users, obj_msg = await post_message(
+                            str(data['chat_id']),
+                            req_id,
+                            login, data,
+                            self.request.app['mongo']
+                        )
+                        for user in users:
+                            if user in self.request.app['websockets']:
+                                await self.request.app['websockets'][user].send_json(obj_msg)
+
             elif msg.type == WSMsgType.ERROR:
                 print('ws connection closed with exception %s' %
                       ws.exception())

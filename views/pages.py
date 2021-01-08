@@ -2,7 +2,7 @@ from aiohttp import web
 import aiohttp_jinja2
 from aiohttp_session import get_session
 
-from utils import check_pass, set_session, create_user
+from utils.other_utils import check_pass, set_session, create_user
 
 from models import User
 

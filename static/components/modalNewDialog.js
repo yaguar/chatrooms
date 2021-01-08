@@ -17,56 +17,21 @@ const ModalNewDialog = (props) => {
         },
         onSubmit: values => {
             values['users'] = props.users
-            let url = '/new_chat'
-            fetch(url, {
-                method: 'post', headers: {
-                    'Accept': 'application/json, text/plain, */*',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(values)
+            let body = JSON.stringify({
+                type: 'CREATE_CHAT',
+                chat: values
             })
-            .then(
-                function (response) {
-                    if (response.status != 201) {
-                        console.log('Looks like there was a problem. Status Code: ' +
-                            response.status);
-                        return 0;
-                    }
-
-                    return 1;
-                }
-            )
-            .catch(function (err) {
-                console.log('Fetch Error :-S', err);
-            });
+            props.websocket.send(body)
             props.visible(false)
         },
   });
 
     const onChange = (value) => {
-        let url = '/login_list?q=' + value
-        fetch(url, {
-                method: 'get', headers: {
-                    'Accept': 'application/json, text/plain, */*',
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(
-                function (response) {
-                    if (response.status != 200) {
-                        console.log('Looks like there was a problem. Status Code: ' +
-                            response.status);
-                        return 0;
-                    }
-                    response.json().then(function(data) {
-                        store.dispatch(rewriteMaybeUserForNewChat(data))
-                    });
-                    return 1;
-                }
-            )
-            .catch(function (err) {
-                console.log('Fetch Error :-S', err);
-            });
+        let body = JSON.stringify({
+                type: 'GET_LOGINS',
+                search: value
+        })
+        props.websocket.send(body)
     }
     const onClickAdd = (user) => {
         store.dispatch(rewriteMaybeUserForNewChat([]))
@@ -97,9 +62,9 @@ const ModalNewDialog = (props) => {
                     value={formik.values.lastName}
                 />
 
-            <p></p>
+            <p />
             <SearchField onChange={onChange} className="modal" placeholder="Добавить человека"/>
-            <p></p>
+            <p />
             <div style={{position: "relative"}}>
             <span>
                 {props.users.map((user, index) => (

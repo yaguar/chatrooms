@@ -1,0 +1,38 @@
+version: '3.5'
+services:
+  web:
+    build: .
+    environment:
+      - PG_HOST=chat-postgres
+      - PG_PORT=5432
+      - PG_USER=username
+      - PG_PASSWORD=password
+      - MONGO_LOGIN=root
+      - MONGO_PASSWORD=example
+      - MONGO_HOST=chat-mongo
+      - MONGO_PORT=27017
+    command: python app.py
+    ports:
+      - "8000:8080"
+    links:
+      - chat-postgres
+      - chat-mongo
+
+  chat-postgres:
+    image: "postgres:10"
+    environment:
+      POSTGRES_USER: "username"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "chat_db"
+    ports:
+      - "5432:5432"
+
+  chat-mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - "27017:27017"
+

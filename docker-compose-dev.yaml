@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: "password"
       POSTGRES_DB: "chat_db"
     ports:
-      - "5433:5432"
+      - "5432:5432"
 
   chat-mongo:
     container_name: chat-mongo

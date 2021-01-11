@@ -3,7 +3,7 @@ import os
 POSTGRES = {
     'user': os.getenv('PG_USER', 'username'),
     'password': os.getenv('PG_PASSWORD', 'password'),
-    'host': os.getenv('PG_HOST', '127.0.0.1'),
+    'host': os.getenv('PG_HOST', '0.0.0.0'),
     'port': os.getenv('PG_PORT', '5432'),
     'database': 'chat_db'
 }

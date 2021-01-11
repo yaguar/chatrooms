@@ -11,9 +11,9 @@ services:
       - MONGO_PASSWORD=example
       - MONGO_HOST=chat-mongo
       - MONGO_PORT=27017
-    command: python app.py
+#    command: gunicorn app:main --bind 0.0.0.0:8080 --worker-class aiohttp.GunicornWebWorker
     ports:
-      - "8000:8080"
+      - "8000:8000"
     links:
       - chat-postgres
       - chat-mongo

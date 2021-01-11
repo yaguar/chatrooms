@@ -59,7 +59,8 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
 
     app = init_app()
-    web.run_app(app)
+    # web.run_app(app)
+    return app
 
 
 if __name__ == '__main__':

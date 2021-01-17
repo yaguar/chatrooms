@@ -36,3 +36,13 @@ services:
     ports:
       - "27017:27017"
 
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    depends_on:
+      - web
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+

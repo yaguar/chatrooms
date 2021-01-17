@@ -16,5 +16,5 @@ class User(db.Model):
 async def init_db():
     """Инициализация postgres"""
 
-    async with db.set_bind('postgres://username:password@localhost:5432/chat_db'):
+    async with db.set_bind('postgres://username:password@0.0.0.0:5432/chat_db'):
         await db.gino.create_all()
